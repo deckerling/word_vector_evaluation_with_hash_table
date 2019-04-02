@@ -54,7 +54,6 @@ const int HashTable::GetSizeOfVectors() {
   std::cout << "\tChecking the size of the word vectors..." << std::endl;
   std::string line;
   std::getline(file_stream, line);
-  file_stream.close();
   std::cout << "\t---Done.\n";
   return (std::count(line.begin(), line.end(), ' '));
 }
@@ -70,7 +69,6 @@ const int HashTable::CountVectors() {
   std::string line;
   while (std::getline(file_stream, line))
     vector_num++; // this might cause problems if your "input_file_" is not a valid word vector file because actually lines and not vectors are counted
-  file_stream.close();
   std::cout << "\t---Done." << std::endl;
   return vector_num;
 }
