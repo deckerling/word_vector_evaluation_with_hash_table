@@ -23,7 +23,7 @@ BinaryTree::~BinaryTree() {
     DestroyTree(root_);
 }
 
-void BinaryTree::DestroyTree(struct Item *current_item) {
+void BinaryTree::DestroyTree(struct Item* current_item) {
   if (current_item->left != NULL)
     DestroyTree(current_item->left);
   if (current_item->right != NULL)
@@ -32,12 +32,12 @@ void BinaryTree::DestroyTree(struct Item *current_item) {
 }
 
 void BinaryTree::AddIndex(const int index_to_add) {
-  struct Item *new_item = new struct Item;
+  struct Item* new_item = new struct Item;
   new_item->index = index_to_add;
   if (root_ == NULL)
     root_ = new_item;
   else {
-    struct Item *current_item = root_;
+    struct Item* current_item = root_;
     while (true) {
       if (current_item->index == index_to_add) // avoids multiple additions of the same index
         return;
@@ -65,7 +65,7 @@ bool BinaryTree::IndexIsAlreadyStored(const int index_to_check_for) {
     return false;
   if (root_->index == index_to_check_for) // if "root_" contains the "index_to_check_for"
     return true;
-  struct Item *current_item = root_;
+  struct Item* current_item = root_;
   while (true) {
     if (index_to_check_for < current_item->index) {
       if (current_item->left == NULL) // if "index_to_check_for" couldn't be found in the binary tree
