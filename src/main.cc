@@ -22,13 +22,13 @@
 std::string SetToLowerCase(std::string string) {
 // Sets every character of a string to lower case and returns the string as a
 // whole.
-  for (unsigned i = 0; i < string.length(); ++i)
-    string[i] = tolower(string[i]);
+  for (auto& character : string)
+    character = tolower(character);
   return string;
 }
 
 template <typename T>
-void StartComparing(T &hash_table) {
+void StartComparing(T& hash_table) {
 // Allows the user to enter two words to compare using the word vectors.
   std::vector<std::string> words(2);
   while (true) {
@@ -45,16 +45,16 @@ void StartComparing(T &hash_table) {
   }
 }
 
-bool IsInteger(const std::string &string_to_check) {
+bool IsInteger(const std::string& string_to_check) {
 // Returns "true" if "string_to_check" equals an integer and "false" otherwise.
-  for (unsigned i = 0; i < string_to_check.length(); ++i) {
-    if (std::isdigit(string_to_check[i]) == 0)
+  for (auto& character : string_to_check) {
+    if (std::isdigit(character) == 0)
       return false;
   }
   return true;
 }
 
-bool IsHashTableFile(const std::string &file_to_check) {
+bool IsHashTableFile(const std::string& file_to_check) {
 // Checks if the given file is a hash table file or a "normal" word vector file
 // by reading the first line. If the file is a hash table file created by this
 // program, the first line contains only three integers separated by ',' - if
@@ -65,22 +65,22 @@ bool IsHashTableFile(const std::string &file_to_check) {
   std::stringstream stream(first_line);
   std::vector<std::string> check_vector;
   int vector_size_count = 0;
-  while (getline(stream, value, ',')) {
+  while (std::getline(stream, value, ',')) {
     if (vector_size_count == 3)
       return false;
     check_vector.push_back(value);
     vector_size_count++;
   }
-  if (vector_size_count == 0)
+  if (vector_size_count != 3)
     return false;
-  for (int i = 0; i < 3; ++i) {
-    if (!IsInteger(check_vector[i]))
+  for (auto& value : check_vector) {
+    if (!IsInteger(value))
       return false;
   }
   return true;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
 // At least one additional argument is needed.
 // Case 1: If you want to create a hash table only on memory, a word vector
 //  file should be given.
