@@ -22,7 +22,7 @@
 #include "wvewht.h" // wvewht = "word_vector_evaluation_with_hash_table"
 
 // The standard constructor of the "HashTable"
-HashTable::HashTable(const std::string &input_file)
+HashTable::HashTable(const std::string& input_file)
     : input_file_(input_file),
       vector_size_(GetSizeOfVectors()),
       vector_num_(CountVectors()),
@@ -73,7 +73,7 @@ const int HashTable::CountVectors() {
   return vector_num;
 }
 
-int HashTable::GetIndex(const std::string &key) { // hash function
+int HashTable::GetIndex(const std::string& key) { // hash function
 // Returns the "index" of the bucket of the hash table the "key" corresponds to.
   int hash = 0, j = 1, k = 0;
   const std::vector<int> primes = {179, 181, 191, 193, 197, 199, 211, 223, 227, 229};
@@ -105,19 +105,19 @@ void HashTable::ShowInfo(const int num_of_empty_buckets, const int highest_num_o
   std::cout << "\tPercentage of vectors in mostly filled bucket = " << 100*((double) highest_num_of_items_in_a_bucket/vector_num_) << '\n';
 }
 
-void HashTable::ShowSimilarity(const std::vector<std::string> &words, const std::vector<std::vector<double>> &vectors) {
+void HashTable::ShowSimilarity(const std::vector<std::string>& words, const std::vector<std::vector<double>>& vectors) {
 // Prints the cosine similarity and the Euclidean distance of two word vectors.
   std::cout << "\tThe cosine similarity of the word vectors of \"" << words[0] << "\" and \"" << words[1] << "\" =\n\t " << CalculateCosineSimilarity(vectors) << '\n';
   std::cout << "\tThe Euclidean distance between the word vectors of \"" << words[0] << "\" and \"" << words[1] << "\" =\n\t " << CalculateEuclideanDistance(vectors) << "\n\n";
 }
 
-double HashTable::CalculateCosineSimilarity(const std::vector<std::vector<double>> &vectors) {
+double HashTable::CalculateCosineSimilarity(const std::vector<std::vector<double>>& vectors) {
 // Calculates and returns the cosine similarity of "vectors[0]" and
 // "vectors[1]".
-  return ((inner_product(std::begin(vectors[0]), std::end(vectors[0]), std::begin(vectors[1]), 0.))/(CalculateEuclideanNorm(vectors[0])*CalculateEuclideanNorm(vectors[1])));
+  return ((std::inner_product(vectors[0].begin(), vectors[0].end(), vectors[1].begin(), 0.))/(CalculateEuclideanNorm(vectors[0])*CalculateEuclideanNorm(vectors[1])));
 }
 
-double HashTable::CalculateEuclideanDistance(const std::vector<std::vector<double>> &vectors) {
+double HashTable::CalculateEuclideanDistance(const std::vector<std::vector<double>>& vectors) {
 // Calculates and returns the Euclidean distance between "vectors[0]" and
 // "vectors[1]".
   double x = 0;
@@ -126,16 +126,16 @@ double HashTable::CalculateEuclideanDistance(const std::vector<std::vector<doubl
   return std::sqrt(x);
 }
 
-double HashTable::CalculateEuclideanNorm(const std::vector<double> &vector) {
+double HashTable::CalculateEuclideanNorm(const std::vector<double>& vector) {
 // Calculates and returns the Euclidean norm of "vec" (needed in order to
 // calculate the cosine similarity).
   double x = 0;
-  for (unsigned i = 0; i < vector.size(); ++i)
-    x += std::pow(vector[i], 2);
+  for (auto& element : vector)
+    x += std::pow(element, 2);
   return std::sqrt(x);
 }
 
-HashTableOnMemory::HashTableOnMemory(const std::string &input_file)
+HashTableOnMemory::HashTableOnMemory(const std::string& input_file)
     : HashTable(input_file) {
   std::vector<struct WordVector*> HT(hash_table_size_);
   hash_table_ = HT;
@@ -143,7 +143,7 @@ HashTableOnMemory::HashTableOnMemory(const std::string &input_file)
 }
 
 HashTableOnMemory::~HashTableOnMemory() {
-  struct WordVector *current_word_vector;
+  struct WordVector* current_word_vector;
   for (int i = 0; i < hash_table_size_; ++i) {
     while (hash_table_[i] != NULL) {
       current_word_vector = hash_table_[i];
@@ -166,7 +166,7 @@ void HashTableOnMemory::ReadVectorFile() {
   std::cout << "\t---Completed.\n";
 }
 
-void HashTableOnMemory::StoreVectors(const std::string &line) {
+void HashTableOnMemory::StoreVectors(const std::string& line) {
 // Stores the word vectors in the hash table on memory.
   const std::vector<std::string> tokens = SplitLine(line);
   std::vector<double> vector(vector_size_);
@@ -180,8 +180,8 @@ void HashTableOnMemory::StoreVectors(const std::string &line) {
       vector[i] = atof(tokens[i+1].c_str());
     hash_table_[index]->vector = vector;
   } else { // collisions are handled by chaining using a linked list
-    struct WordVector *current_word_vector = hash_table_[index];
-    struct WordVector *new_word_vector = new struct WordVector;
+    struct WordVector* current_word_vector = hash_table_[index];
+    struct WordVector* new_word_vector = new struct WordVector;
     new_word_vector->word = tokens[0];
     for (int i = 0; i < vector_size_; ++i)
       vector[i] = atof(tokens[i+1].c_str());
@@ -192,16 +192,16 @@ void HashTableOnMemory::StoreVectors(const std::string &line) {
   }
 }
 
-std::vector<std::string> HashTableOnMemory::SplitLine(const std::string &line) {
+std::vector<std::string> HashTableOnMemory::SplitLine(const std::string& line) {
 // Splits the lines (strings) of the vector file into their tokens and returns
 // all of those tokens in a std::vector. (The tokens within a "line" should be
 // separated by whitespaces.)
   std::stringstream stream(line);
   std::string item;
   std::vector<std::string> tokens(vector_size_+1);
-  for (unsigned i = 0; i < tokens.size(); ++i) {
-    getline(stream, item, ' ');
-    tokens[i] = item;
+  for (auto& token : tokens) {
+    std::getline(stream, item, ' ');
+    token = item;
   }
   return tokens;
 }
@@ -228,7 +228,7 @@ int HashTableOnMemory::GetNumOfWordVectors(const int index) {
     return 0;
   else {
     count++;
-    struct WordVector *current_word_vector = hash_table_[index];
+    struct WordVector* current_word_vector = hash_table_[index];
     while (current_word_vector->next != NULL) {
       count++;
       current_word_vector = current_word_vector->next;
@@ -237,33 +237,31 @@ int HashTableOnMemory::GetNumOfWordVectors(const int index) {
   return count;
 }
 
-void HashTableOnMemory::CompareWordVectors(const std::vector<std::string> &words) {
+void HashTableOnMemory::CompareWordVectors(const std::vector<std::string>& words) {
 // Starts searching for the word vectors corresponding to the "words" by
 // passing the "words" to "GetVector()". If a word cannot be found in the
-// "HashTableOnMemory" "GetVector()" returns a vector with every element == 0.
-// It will be checked if the returned vector is equal to a "check vector"
-// ("vectors[2]") that also contains only zeros. If so, the method stops by
-// returning. If both word vectors are found, they will be passed to
-// "ShowSimilarity()".
-  std::vector<std::vector<double>> vectors(3, std::vector<double>(vector_size_));
+// "HashTableOnMemory", "GetVector()" returns an empty vector. If so, the
+// method stops by returning. If both word vectors are found, they will be
+// passed to "ShowSimilarity()".
+  std::vector<std::vector<double>> vectors(2, std::vector<double>(vector_size_));
   for (unsigned i = 0; i < words.size(); ++i) {
     vectors[i] = GetVector(words[i]);
-    if (vectors[i] == vectors[2])
+    if (vectors[i].empty())
       return;
   }
   ShowSimilarity(words, vectors);
 }
 
-std::vector<double> HashTableOnMemory::GetVector(const std::string &word) {
+std::vector<double> HashTableOnMemory::GetVector(const std::string& word) {
 // Given a word (std::string) this method returns the corresponding vector if
-// the word and its vector are stored in the "HashTableOnMemory"; if not, a
-// vector with every element == 0 will be returned.
+// the word and its vector are stored in the "HashTableOnMemory"; if not, an
+// empty vector will be returned.
   const int index = GetIndex(word);
   if (hash_table_[index] != NULL) {
     if (hash_table_[index]->word == word)
       return hash_table_[index]->vector;
     else {
-      struct WordVector *current_word_vector = hash_table_[index];
+      struct WordVector* current_word_vector = hash_table_[index];
       while (current_word_vector->next != NULL) {
         current_word_vector = current_word_vector->next;
         if (current_word_vector->word == word)
@@ -272,10 +270,10 @@ std::vector<double> HashTableOnMemory::GetVector(const std::string &word) {
     }
   }
   std::cout << "\t\"" << word << "\" couldn't be found in your data! Comparison impossible.\n\n";
-  return (std::vector<double> (vector_size_));
+  return std::vector<double>();
 }
 
-HashTableWriter::HashTableWriter(const std::string &input_file, const std::string &output_file)
+HashTableWriter::HashTableWriter(const std::string& input_file, const std::string& output_file)
     : HashTable(input_file),
       input_file_(input_file),
       output_file_(output_file) {
@@ -338,7 +336,7 @@ void HashTableWriter::CreateHashTable() {
   std::cout << "Program terminated.";
 }
 
-HashTableReader::HashTableReader(const std::string &hash_table_file)
+HashTableReader::HashTableReader(const std::string& hash_table_file)
     : hash_table_file_(hash_table_file),
       hash_table_values_(GetHashTableValues()) {
   std::cout << "Your hash table file contains\n\t" << hash_table_values_[1] << " word vectors\n\twith " << hash_table_values_[0] << " dimensions in " << hash_table_values_[2] << " buckets.\n";
@@ -358,20 +356,20 @@ std::vector<int> HashTableReader::GetHashTableValues() {
   std::getline(input_file_stream, first_line);
   std::stringstream stream(first_line);
   std::vector<int> hash_table_values(3);
-  for (unsigned i = 0; i < hash_table_values.size(); ++i) {
-    getline(stream, value, ',');
-    hash_table_values[i] = std::stoi(value);
+  for (auto& hash_table_value : hash_table_values) {
+    std::getline(stream, value, ',');
+    hash_table_value = std::stoi(value);
   }
   return hash_table_values;
 }
 
-void HashTableReader::CompareWordVectors(const std::vector<std::string> &words) {
+void HashTableReader::CompareWordVectors(const std::vector<std::string>& words) {
 // Creates a "HashTable" and starts the comparison of the "words".
   HashTable HT(hash_table_values_[2]);
   GetVectors(HT, words);
 }
 
-void HashTableReader::GetVectors(HashTable &hash_table, const std::vector<std::string> &words) {
+void HashTableReader::GetVectors(HashTable& hash_table, const std::vector<std::string>& words) {
 // Collects the "vectors" corresponding to both "words" and passes them to
 // "ShowSimilarity()" (if both words were found in the hash table file).
   std::vector<std::vector<double>> vectors(2, std::vector<double>(hash_table_values_[0], 0)); // every value of both vectors is 0 by default in order to evaluate later if the "words" were found (if not all values stay 0)
@@ -411,7 +409,7 @@ void HashTableReader::GetVectors(HashTable &hash_table, const std::vector<std::s
   hash_table.ShowSimilarity(words, vectors);
 }
 
-void HashTableReader::GetBothVectors(const std::string &line, const std::vector<std::string> &words_to_find, std::vector<std::vector<double>> &vectors) {
+void HashTableReader::GetBothVectors(const std::string& line, const std::vector<std::string>& words_to_find, std::vector<std::vector<double>>& vectors) {
 // Searches for the vectors corresponding to both "words_to_find" and
 // overwrites the "vectors" (which contain only zeros by default) with the
 // values found in the line of the hash table file.
@@ -419,7 +417,7 @@ void HashTableReader::GetBothVectors(const std::string &line, const std::vector<
   std::vector<std::string> word_vectors_of_line;
   std::string word_vector;
   int i = 0, j = 2;
-  while (getline(stream_of_line, word_vector, ',')) {
+  while (std::getline(stream_of_line, word_vector, ',')) {
     for (int k = i; k < j; ++k) {
       if (word_vector.substr(0, words_to_find[k].length()) == words_to_find[k]) {
         vectors[k] = GetVector(word_vector);
@@ -432,30 +430,30 @@ void HashTableReader::GetBothVectors(const std::string &line, const std::vector<
   }
 }
 
-std::string HashTableReader::GetWordVectorsFromLine(const std::string &line, const std::string &word_to_find) {
+std::string HashTableReader::GetWordVectorsFromLine(const std::string& line, const std::string& word_to_find) {
 // Searches for the word vector of the "word_to_find" in the "line" and returns
 // it as a string (if the "word_to_find" was found). If the "word_to_find"
 // couldn't be found an empty string will be returned.
   std::stringstream stream_of_line(line);
   std::vector<std::string> word_vectors_of_line;
   std::string word_vector;
-  while (getline(stream_of_line, word_vector, ',')) {
+  while (std::getline(stream_of_line, word_vector, ',')) {
     if (word_vector.substr(0, word_to_find.length()) == word_to_find)
       return word_vector;
   }
   return "";
 }
 
-std::vector<double> HashTableReader::GetVector(const std::string &word_vector) {
+std::vector<double> HashTableReader::GetVector(const std::string& word_vector) {
 // Takes the string "word_vector" and returns the actual vector as a
 // std::vector<double>.
   std::vector<double> vector(hash_table_values_[0]);
   std::stringstream stream(word_vector);
   std::string value;
-  getline(stream, value, ' '); // skips the first value, which is the "word" of the "word_vector"
-  for (unsigned i = 0; i < vector.size(); ++i) {
+  std::getline(stream, value, ' '); // skips the first value, which is the "word" of the "word_vector"
+  for (auto& element : vector) {
     getline(stream, value, ' ');
-    vector[i] = atof(value.c_str());
+    element = atof(value.c_str());
   }
   return vector;
 }
