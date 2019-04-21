@@ -93,7 +93,7 @@ int HashTable::GetIndex(const std::string& key) { // hash function
   return index;
 }
 
-void HashTable::ShowInfo(const int num_of_empty_buckets, const int highest_num_of_items_in_a_bucket) {
+void HashTable::ShowInfo(const int num_of_empty_buckets, const int highest_num_of_nodes_in_a_bucket) {
 // Prints the most important information regarding the created hash table.
   std::cout << "\tSize of vectors = " << vector_size_ << '\n';
   std::cout << "\tNumber of stored word vectors = " << vector_num_ << '\n';
@@ -101,8 +101,8 @@ void HashTable::ShowInfo(const int num_of_empty_buckets, const int highest_num_o
   std::cout << "\tLoad factor = " << (double) vector_num_/hash_table_size_ << '\n';
   std::cout << "\tNumber of empty buckets = " << num_of_empty_buckets << '\n';
   std::cout << "\tPercentage of empty buckets = " << 100*((double) num_of_empty_buckets/hash_table_size_) << " %\n";
-  std::cout << "\tHighest number of word vectors in a bucket = " << highest_num_of_items_in_a_bucket << '\n';
-  std::cout << "\tPercentage of vectors in mostly filled bucket = " << 100*((double) highest_num_of_items_in_a_bucket/vector_num_) << '\n';
+  std::cout << "\tHighest number of word vectors in a bucket = " << highest_num_of_nodes_in_a_bucket << '\n';
+  std::cout << "\tPercentage of vectors in mostly filled bucket = " << 100*((double) highest_num_of_nodes_in_a_bucket/vector_num_) << '\n';
 }
 
 void HashTable::ShowSimilarity(const std::vector<std::string>& words, const std::vector<std::vector<double>>& vectors) {
@@ -137,13 +137,13 @@ double HashTable::CalculateEuclideanNorm(const std::vector<double>& vector) {
 
 HashTableOnMemory::HashTableOnMemory(const std::string& input_file)
     : HashTable(input_file) {
-  std::vector<struct WordVector*> HT(hash_table_size_);
+  std::vector<WordVector*> HT(hash_table_size_);
   hash_table_ = HT;
   ReadVectorFile();
 }
 
 HashTableOnMemory::~HashTableOnMemory() {
-  struct WordVector* current_word_vector;
+  WordVector* current_word_vector;
   for (int i = 0; i < hash_table_size_; ++i) {
     while (hash_table_[i] != NULL) {
       current_word_vector = hash_table_[i];
@@ -172,23 +172,18 @@ void HashTableOnMemory::StoreVectors(const std::string& line) {
   std::vector<double> vector(vector_size_);
   const int index = GetIndex(tokens[0]);
   if (hash_table_[index] == NULL) {
-    hash_table_[index] = new struct WordVector;
-    hash_table_[index]->word = tokens[0];
     for (int i = 0; i < vector_size_; ++i)
       // Converts the (std::string) elements of "tokens" that represent the
       // values of the word vector into the type "double".
       vector[i] = atof(tokens[i+1].c_str());
-    hash_table_[index]->vector = vector;
+    hash_table_[index] = new WordVector(tokens[0], vector);
   } else { // collisions are handled by chaining using a linked list
-    struct WordVector* current_word_vector = hash_table_[index];
-    struct WordVector* new_word_vector = new struct WordVector;
-    new_word_vector->word = tokens[0];
+    WordVector* current_word_vector = hash_table_[index];
     for (int i = 0; i < vector_size_; ++i)
       vector[i] = atof(tokens[i+1].c_str());
-    new_word_vector->vector = vector;
     while (current_word_vector->next != NULL)
       current_word_vector = current_word_vector->next;
-    current_word_vector->next = new_word_vector;
+    current_word_vector->next = new WordVector(tokens[0], vector);
   }
 }
 
@@ -209,26 +204,26 @@ std::vector<std::string> HashTableOnMemory::SplitLine(const std::string& line) {
 void HashTableOnMemory::PrintInfo() {
 // Calculates some of the numeric information of the created hash table and
 // passes them to "ShowInfo()" that prints them.
-  int num_of_empty_buckets = 0, highest_num_of_items_in_a_bucket = 0, word_vector_num;
+  int num_of_empty_buckets = 0, highest_num_of_nodes_in_a_bucket = 0, word_vector_num;
   for (int i = 0; i < hash_table_size_; ++i) {
     word_vector_num = GetNumOfWordVectors(i);
     if (word_vector_num == 0)
       num_of_empty_buckets++;
-    if (highest_num_of_items_in_a_bucket < word_vector_num)
-      highest_num_of_items_in_a_bucket = word_vector_num;
+    if (highest_num_of_nodes_in_a_bucket < word_vector_num)
+      highest_num_of_nodes_in_a_bucket = word_vector_num;
   }
-  ShowInfo(num_of_empty_buckets, highest_num_of_items_in_a_bucket);
+  ShowInfo(num_of_empty_buckets, highest_num_of_nodes_in_a_bucket);
 }
 
 int HashTableOnMemory::GetNumOfWordVectors(const int index) {
-// Counts the number of word vectors (items) in a bucket of the
+// Counts the number of word vectors (nodes) in a bucket of the
 // "HashTableOnMemory" and returns this number.
   int count = 0;
   if (hash_table_[index] == NULL)
     return 0;
   else {
     count++;
-    struct WordVector* current_word_vector = hash_table_[index];
+    WordVector* current_word_vector = hash_table_[index];
     while (current_word_vector->next != NULL) {
       count++;
       current_word_vector = current_word_vector->next;
@@ -261,7 +256,7 @@ std::vector<double> HashTableOnMemory::GetVector(const std::string& word) {
     if (hash_table_[index]->word == word)
       return hash_table_[index]->vector;
     else {
-      struct WordVector* current_word_vector = hash_table_[index];
+      WordVector* current_word_vector = hash_table_[index];
       while (current_word_vector->next != NULL) {
         current_word_vector = current_word_vector->next;
         if (current_word_vector->word == word)
@@ -291,14 +286,14 @@ void HashTableWriter::CreateHashTable() {
   std::cout << "\tCreating hash table file with " << hash_table_size_ << " buckets..." << std::endl;
   std::string vector_line, current_bucket;
   std::ofstream out;
-  int num_of_empty_buckets = 0, num_of_items_in_current_bucket, highest_num_of_items_in_a_bucket, flush_interval_factor = 1;
+  int num_of_empty_buckets = 0, num_of_nodes_in_current_bucket, highest_num_of_nodes_in_a_bucket, flush_interval_factor = 1;
   out.open(output_file_, std::ios_base::app);
   out << vector_size_ << ',' << vector_num_ << ',' << hash_table_size_ << '\n';
   BinaryTree indices;
   // All vectors of a bucket get connected to a single std::string, which will
   // be written to the hash table file.
   for (int bucket_num = 0; bucket_num < hash_table_size_; ++bucket_num) {
-    num_of_items_in_current_bucket = 0;
+    num_of_nodes_in_current_bucket = 0;
     std::ifstream input_file_stream(input_file_);
     current_bucket = std::to_string(bucket_num);
     // Every word vector (i.e. every line of the "input_file_") gets checked if
@@ -310,7 +305,7 @@ void HashTableWriter::CreateHashTable() {
       // will be skipped.
       if (!indices.IndexIsAlreadyStored(i) && VectorInCurrentBucket(vector_line, bucket_num)) {
         current_bucket += ','+vector_line; // collisions are handled by chaining
-        num_of_items_in_current_bucket++;
+        num_of_nodes_in_current_bucket++;
         // The index of the line gets stored in a binary tree in order to skip
         // the line next time due to the condition of the if-statement (this
         // reduces the average running time).
@@ -318,8 +313,8 @@ void HashTableWriter::CreateHashTable() {
       }
     }
     input_file_stream.close();
-    if (num_of_items_in_current_bucket > highest_num_of_items_in_a_bucket)
-      highest_num_of_items_in_a_bucket = num_of_items_in_current_bucket;
+    if (num_of_nodes_in_current_bucket > highest_num_of_nodes_in_a_bucket)
+      highest_num_of_nodes_in_a_bucket = num_of_nodes_in_current_bucket;
     if (current_bucket != std::to_string(bucket_num))
       out << current_bucket << '\n';
     else
@@ -332,7 +327,7 @@ void HashTableWriter::CreateHashTable() {
   }
   std::cout << "\t---Done.\n";
   std::cout << "Hash table created and saved (\"" << output_file_ << "\").\n";
-  ShowInfo(num_of_empty_buckets, highest_num_of_items_in_a_bucket);
+  ShowInfo(num_of_empty_buckets, highest_num_of_nodes_in_a_bucket);
   std::cout << "Program terminated.";
 }
 
