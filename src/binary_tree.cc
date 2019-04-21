@@ -23,64 +23,63 @@ BinaryTree::~BinaryTree() {
     DestroyTree(root_);
 }
 
-void BinaryTree::DestroyTree(struct Item* current_item) {
-  if (current_item->left != NULL)
-    DestroyTree(current_item->left);
-  if (current_item->right != NULL)
-    DestroyTree(current_item->right);
-  delete current_item;
+void BinaryTree::DestroyTree(Node* current_node) {
+  if (current_node->left != NULL)
+    DestroyTree(current_node->left);
+  if (current_node->right != NULL)
+    DestroyTree(current_node->right);
+  delete current_node;
 }
 
-void BinaryTree::AddIndex(const int index_to_add) {
-  struct Item* new_item = new struct Item;
-  new_item->index = index_to_add;
+void BinaryTree::AddIndex(const unsigned index_to_add) {
+  Node* new_node = new Node(index_to_add);
   if (root_ == NULL)
-    root_ = new_item;
+    root_ = new_node;
   else {
-    struct Item* current_item = root_;
+    Node* current_node = root_;
     while (true) {
-      if (current_item->index == index_to_add) // avoids multiple additions of the same index
+      if (current_node->index == index_to_add) // avoids multiple additions of the same index
         return;
-      if (index_to_add < current_item->index) { // if "index_to_add" is smaller than "current_item->index" it will be stored on the left of "current_item"
-        if (current_item->left == NULL) {
-          current_item->left = new_item;
+      if (index_to_add < current_node->index) { // if "index_to_add" is smaller than "current_node->index" it will be stored on the left of "current_node"
+        if (current_node->left == NULL) {
+          current_node->left = new_node;
           return;
         } else
-          current_item = current_item->left;
-      } else { // if "index_to_add" is bigger than "current_item->index" it will be stored on the right of "current_item"
-        if (current_item->right == NULL) {
-          current_item->right = new_item;
+          current_node = current_node->left;
+      } else { // if "index_to_add" is bigger than "current_node->index" it will be stored on the right of "current_node"
+        if (current_node->right == NULL) {
+          current_node->right = new_node;
           return;
         } else
-          current_item = current_item->right;
+          current_node = current_node->right;
       }
     }
   }
 }
 
-bool BinaryTree::IndexIsAlreadyStored(const int index_to_check_for) {
+bool BinaryTree::IndexIsAlreadyStored(const unsigned index_to_check_for) {
 // Checks if the "index_to_check_for" is stored in the binary tree and returns
 // "true" if so and "false" otherwise.
   if (root_ == NULL)
     return false;
   if (root_->index == index_to_check_for) // if "root_" contains the "index_to_check_for"
     return true;
-  struct Item* current_item = root_;
+  Node* current_node = root_;
   while (true) {
-    if (index_to_check_for < current_item->index) {
-      if (current_item->left == NULL) // if "index_to_check_for" couldn't be found in the binary tree
+    if (index_to_check_for < current_node->index) {
+      if (current_node->left == NULL) // if "index_to_check_for" couldn't be found in the binary tree
         return false;
-      else if (current_item->left->index == index_to_check_for)
+      else if (current_node->left->index == index_to_check_for)
         return true;
       else
-        current_item = current_item->left;
+        current_node = current_node->left;
     } else {
-      if (current_item->right == NULL) // if "index_to_check_for" couldn't be found in the binary tree
+      if (current_node->right == NULL) // if "index_to_check_for" couldn't be found in the binary tree
         return false;
-      else if (current_item->right->index == index_to_check_for)
+      else if (current_node->right->index == index_to_check_for)
         return true;
       else
-        current_item = current_item->right;
+        current_node = current_node->right;
     }
   }
 }
