@@ -144,10 +144,10 @@ HashTableOnMemory::HashTableOnMemory(const std::string& input_file)
 
 HashTableOnMemory::~HashTableOnMemory() {
   WordVector* current_word_vector;
-  for (int i = 0; i < hash_table_size_; ++i) {
-    while (hash_table_[i] != NULL) {
-      current_word_vector = hash_table_[i];
-      hash_table_[i] = hash_table_[i]->next;
+  for (auto& bucket : hash_table_) {
+    while (bucket != NULL) {
+      current_word_vector = bucket;
+      bucket = bucket->next;
       delete current_word_vector;
     }
   }
@@ -171,20 +171,17 @@ void HashTableOnMemory::StoreVectors(const std::string& line) {
   const std::vector<std::string> tokens = SplitLine(line);
   std::vector<double> vector(vector_size_);
   const int index = GetIndex(tokens[0]);
-  if (hash_table_[index] == NULL) {
-    for (int i = 0; i < vector_size_; ++i)
-      // Converts the (std::string) elements of "tokens" that represent the
-      // values of the word vector into the type "double".
-      vector[i] = atof(tokens[i+1].c_str());
-    hash_table_[index] = new WordVector(tokens[0], vector);
-  } else { // collisions are handled by chaining using a linked list
+  for (int i = 0; i < vector_size_; ++i)
+    // Converts the (std::string) elements of "tokens" that represent the
+    // values of the word vector into the type "double".
+    vector[i] = atof(tokens[i+1].c_str());
+  if (hash_table_[index] != NULL) { // collisions are handled by chaining using a linked list
     WordVector* current_word_vector = hash_table_[index];
-    for (int i = 0; i < vector_size_; ++i)
-      vector[i] = atof(tokens[i+1].c_str());
     while (current_word_vector->next != NULL)
       current_word_vector = current_word_vector->next;
     current_word_vector->next = new WordVector(tokens[0], vector);
-  }
+  } else
+    hash_table_[index] = new WordVector(tokens[0], vector);
 }
 
 std::vector<std::string> HashTableOnMemory::SplitLine(const std::string& line) {
@@ -222,12 +219,8 @@ int HashTableOnMemory::GetNumOfWordVectors(const int index) {
   if (hash_table_[index] == NULL)
     return 0;
   else {
-    count++;
-    WordVector* current_word_vector = hash_table_[index];
-    while (current_word_vector->next != NULL) {
+    for (WordVector* it = hash_table_[index]; it != NULL; it = it->next)
       count++;
-      current_word_vector = current_word_vector->next;
-    }
   }
   return count;
 }
@@ -253,16 +246,8 @@ std::vector<double> HashTableOnMemory::GetVector(const std::string& word) {
 // empty vector will be returned.
   const int index = GetIndex(word);
   if (hash_table_[index] != NULL) {
-    if (hash_table_[index]->word == word)
-      return hash_table_[index]->vector;
-    else {
-      WordVector* current_word_vector = hash_table_[index];
-      while (current_word_vector->next != NULL) {
-        current_word_vector = current_word_vector->next;
-        if (current_word_vector->word == word)
-          return current_word_vector->vector;
-      }
-    }
+    for (WordVector* it = hash_table_[index]; it != NULL; it = it->next)
+      if (it->word == word) return it->vector;
   }
   std::cout << "\t\"" << word << "\" couldn't be found in your data! Comparison impossible.\n\n";
   return std::vector<double>();
