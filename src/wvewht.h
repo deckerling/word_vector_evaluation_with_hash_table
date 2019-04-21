@@ -78,7 +78,7 @@ class HashTable {
   const int GetSizeOfVectors();
   const int CountVectors();
   int GetIndex(const std::string& key); // hash function
-  void ShowInfo(const int num_of_empty_buckets, const int highest_num_of_items_in_a_bucket);
+  void ShowInfo(const int num_of_empty_buckets, const int highest_num_of_nodes_in_a_bucket);
   void ShowSimilarity(const std::vector<std::string>& words, const std::vector<std::vector<double>>& vectors);
   double CalculateCosineSimilarity(const std::vector<std::vector<double>>& vectors);
   double CalculateEuclideanDistance(const std::vector<std::vector<double>>& vectors);
@@ -100,7 +100,8 @@ class HashTableOnMemory : public HashTable {
   struct WordVector {
     std::string word;
     std::vector<double> vector;
-    WordVector* next = NULL;
+    WordVector* next;
+    WordVector(std::string str, std::vector<double> vec) : word(str), vector(vec), next(NULL) {}
   };
   std::vector<WordVector*> hash_table_;
   void ReadVectorFile();
@@ -125,7 +126,7 @@ class HashTableWriter : public HashTable {
   // Returns "true" if the word vector fits into the current bucket and "false"
   // if not. (Remember: If the vector file is designed in a way this program
   // can work with, the "word" of a word vector is equal to all of the chars of
-  // a line up to the first whitespace (i.e. the first "item" of a line)).
+  // a line up to the first whitespace (i.e. the first "node" of a line)).
     return (bucket_num == GetIndex(line.substr(0, line.find_first_of(' '))));
   }
 };
@@ -134,17 +135,18 @@ class BinaryTree {
  public:
   BinaryTree();
   ~BinaryTree();
-  void AddIndex(const int index_to_add);
-  bool IndexIsAlreadyStored(const int index_to_check_for);
+  void AddIndex(const unsigned index_to_add);
+  bool IndexIsAlreadyStored(const unsigned index_to_check_for);
 
  private:
-  struct Item {
-    int index = -1;
-    struct Item* left = NULL;
-    struct Item* right = NULL;
+  struct Node {
+    unsigned index;
+    Node* left;
+    Node* right;
+    Node(unsigned i) : index(i), left(NULL), right(NULL) {}
   };
-  struct Item* root_ = NULL;
-  void DestroyTree(struct Item* current_item);
+  Node* root_ = NULL;
+  void DestroyTree(Node* current_node);
 };
 
 #endif // WORD_VECTOR_EVALUATION_WITH_HASH_TABLE_SRC_WVEWHT_H_
